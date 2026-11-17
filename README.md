@@ -1,239 +1,290 @@
-# Secure Note-Taking REST API
+# Secure Notes — Backend API
 
-A modular note-taking API built with Node.js, Express, MongoDB, and Mongoose. It includes JWT authentication, role-based access control, note ownership rules, pagination, indexes, aggregation endpoints, and a demo frontend.
+A full-stack note management application with a REST API built using Node.js, Express, MongoDB, and Mongoose. The API supports user accounts, private notes, and administrator tools.
 
-## Live Deployment
+## Project Links
 
-| Resource | URL |
-| --- | --- |
-| Live Backend API | https://secure-notes-api-u0nq.onrender.com |
-| Health Check | https://secure-notes-api-u0nq.onrender.com/health |
-| GitHub Repository | https://github.com/2021331100/Assignment-Noteapp |
+| Resource | Link |
+|---|---|
+| Live application | https://cerulean-starburst-490a40.netlify.app/ |
+| Frontend source code | https://github.com/2021331100/secure-notes-frontend |
+| Backend source code | https://github.com/2021331100/Assignment-Noteapp |
+| Live API base URL | https://secure-notes-api-u0nq.onrender.com |
+| API health check | https://secure-notes-api-u0nq.onrender.com/health |
+| Backend README | https://github.com/2021331100/Assignment-Noteapp/blob/production-hardening/README.md |
+| Frontend README | https://github.com/2021331100/secure-notes-frontend/blob/main/README.md |
 
-The health endpoint should return `status: "ok"` and `database: "connected"` when the API and MongoDB are ready.
+The health check should return `status: "ok"` and `database: "connected"`.
 
-> Render free services may spin down after inactivity. The first request after a quiet period may take longer.
+## What the Application Does
 
-## Features
+Users can create an account, sign in, and manage their own notes. Administrators have additional access to manage user accounts and view notes across the application.
 
-- User registration and login with JWT bearer authentication
-- Password hashing with bcryptjs
-- User and admin role-based permissions
-- Note CRUD restricted to note owners
-- Admin user management and visibility of all notes
-- Group users by interests
-- Pagination and MongoDB indexes
-- Helmet security headers and rate limiting
-- Exact-origin CORS allowlist
-- Environment validation and persistent MongoDB requirement
-- Health check, structured request logs, and graceful shutdown
+### User features
+- Register and sign in.
+- Create a note.
+- View a list of personal notes.
+- View, edit, and delete an individual personal note.
+- View the signed-in user's profile.
 
-## Local Setup
+### Administrator features
+- Sign in with an administrator account.
+- View all registered users.
+- Create, view, update, and delete user accounts.
+- View notes belonging to all users.
+- Group users by their interests.
+
+### Security and reliability
+- Passwords are hashed before storage.
+- JWT bearer tokens protect private API routes.
+- Role checks restrict administrator routes.
+- Users can only access their own notes.
+- Request validation, rate limiting, Helmet security headers, and CORS origin checks are enabled.
+- MongoDB stores application data.
+
+## Technology Stack
+
+- **Frontend:** HTML, CSS, JavaScript
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB Atlas, Mongoose
+- **Authentication:** JSON Web Tokens (JWT)
+- **Password hashing:** bcryptjs
+- **Hosting:** Netlify (frontend), Render (backend)
+
+## How to Use the Live Application
+
+1. Open the [live application](https://cerulean-starburst-490a40.netlify.app/).
+2. Choose **Register** to create a regular user account.
+3. Sign in with the email and password used during registration.
+4. Create notes from the notes dashboard.
+5. Select a note to view or edit it. Use the delete action to remove a note.
+6. Sign out when finished.
+
+A regular registration creates a normal user account. It does not create an administrator account.
+
+## Roles and Permissions
+
+| Action | User | Admin |
+|---|:---:|:---:|
+| Register and sign in | Yes | Yes |
+| Create notes | Yes | Yes |
+| View own notes | Yes | Yes |
+| Update own notes | Yes | Yes |
+| Delete own notes | Yes | Yes |
+| List all users | No | Yes |
+| Create, update, and delete users | No | Yes |
+| View all users' notes | No | Yes |
+| Group users by interests | No | Yes |
+
+The server checks permissions. Hiding an administrator page in the frontend does not replace the server-side permission checks.
+
+## API Reference
+
+All endpoints use this live base URL:
+
+```
+https://secure-notes-api-u0nq.onrender.com
+```
+
+For protected endpoints, send the token returned by login in the request header:
+
+```
+Authorization: Bearer YOUR_ACCESS_TOKEN
+```
+
+### Authentication
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | Public | Create a regular user account |
+| POST | `/api/auth/login` | Public | Sign in and receive an access token |
+| GET | `/api/auth/me` | Signed-in user | Get the current user's profile |
+
+Example registration body:
+
+```json
+{
+  "name": "Test User",
+  "email": "user@example.com",
+  "password": "Use-a-strong-password",
+  "interests": ["reading", "coding"]
+}
+```
+
+Example login body:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "Use-a-strong-password"
+}
+```
+
+Use the exact field names shown in the examples. The server does not allow public registration to grant administrator privileges.
+
+### Notes
+
+All note endpoints require a valid User or Admin token. A user can access only their own notes.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/notes` | Create a note |
+| GET | `/api/notes` | List your notes |
+| GET | `/api/notes/:id` | Get one of your notes |
+| PUT | `/api/notes/:id` | Update one of your notes |
+| DELETE | `/api/notes/:id` | Delete one of your notes |
+
+Use **PUT** to update a note. The documented update route is not PATCH.
+
+### Administrator
+
+Every endpoint in this section requires an Admin token.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/admin/users` | Create a user |
+| GET | `/api/admin/users` | List all users |
+| GET | `/api/admin/users/:id` | View one user |
+| PUT | `/api/admin/users/:id` | Update a user |
+| DELETE | `/api/admin/users/:id` | Delete a user |
+| GET | `/api/admin/notes` | View all users' notes |
+| GET | `/api/admin/users/group-by-interests` | Group users by interests |
+
+### Other endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/users/:userId/posts` | Get posts for a user (requires sign-in) |
+| GET | `/health` | Check API and database status |
+
+List endpoints support pagination with query parameters such as `?page=1&limit=10`.
+
+## Administrator Account Setup
+
+The public Register page creates a regular user. Administrator accounts are created separately by the project owner using the backend's one-time seed command.
+
+From the backend project directory, install dependencies and set the required environment values in your local terminal:
 
 ```bash
 npm install
-cp .env.example .env
+
+ADMIN_NAME="Assignment Admin" \
+ADMIN_EMAIL="your-admin-email@example.com" \
+ADMIN_PASSWORD="Choose-a-unique-password-of-12-chars-or-more" \
+MONGODB_URI="your-production-mongodb-connection-string" \
+npm run seed:admin
 ```
 
-Set the required values in `.env`:
+Replace the example values with your own. Use the same MongoDB database configured for the deployed API. The password must be at least 12 characters. The seed command will not convert an existing regular account into an administrator; use a separate email address.
 
-- `MONGODB_URI`: MongoDB Atlas or another persistent MongoDB connection string
-- `JWT_SECRET`: a random secret of at least 32 characters
-- `CORS_ORIGIN`: the exact frontend origin, e.g. `http://localhost:3000`
-- `TRUST_PROXY_HOPS`: use `0` for local development
+After the command succeeds, remove the temporary environment values from your terminal session. Never add real passwords, database connection strings, or tokens to this repository.
 
-Start the API:
+### Administrator sign-in
+
+Use the administrator email and password created by the seed command on the application's sign-in page. The server returns an access token for that account. Administrator pages and API routes are available only when the signed-in account has the Admin role.
+
+Do not publish administrator credentials in this README. If an evaluator needs access, provide a dedicated test account through a private channel and disable or rotate it after evaluation.
+
+## Run the Backend Locally
+
+### Requirements
+- Node.js (LTS version recommended)
+- npm
+- A MongoDB database (MongoDB Atlas or local MongoDB)
+
+### Install
+
+```bash
+git clone https://github.com/2021331100/Assignment-Noteapp.git
+cd Assignment-Noteapp
+npm install
+```
+
+Create a `.env` file in the project root:
+
+```env
+NODE_ENV=development
+PORT=3000
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=replace_with_a_random_secret_of_at_least_32_characters
+CORS_ORIGIN=http://localhost:5500
+TRUST_PROXY_HOPS=0
+```
+
+Start the development server:
 
 ```bash
 npm run dev
 ```
 
-The server listens on `PORT` (default 3000). It fails at startup if required production configuration is missing. There is no local or in-memory database fallback.
+The API will run at `http://localhost:3000`. Check `http://localhost:3000/health` to confirm the database connection.
 
-## Roles and Permissions
+## Deployment and Configuration
 
-| Feature | User | Admin |
-| --- | :---: | :---: |
-| Register and log in | Yes | Yes |
-| Create notes | Yes | Yes |
-| View own notes | Yes | Yes |
-| Update own notes | Yes | Yes |
-| Delete own notes | Yes | Yes |
-| Manage users | No | Yes |
-| View all users | No | Yes |
-| View every user's notes | No | Yes |
-| Group users by interests | No | Yes |
+The deployed frontend is hosted on Netlify and the API is hosted on Render.
 
-A regular user must not be able to access admin endpoints or another user's notes. The registration endpoint must not allow a client to grant itself the admin role.
+The Render service needs these environment variables:
 
-## API Endpoints
+| Variable | Purpose |
+|---|---|
+| `NODE_ENV` | Set to `production` |
+| `MONGODB_URI` | MongoDB connection string |
+| `JWT_SECRET` | Private signing secret, at least 32 characters |
+| `CORS_ORIGIN` | Exact frontend origin: `https://cerulean-starburst-490a40.netlify.app` |
+| `TRUST_PROXY_HOPS` | Proxy hop count configured for the hosting setup |
 
-All endpoints below are relative to the live API base URL:
+Do not add a trailing slash to the `CORS_ORIGIN` value. If another frontend domain is used, add its exact origin as a comma-separated value. Redeploy the backend after changing environment variables.
 
-`https://secure-notes-api-u0nq.onrender.com`
+## Testing with Postman
 
-### Authentication
+1. Open the [live API base URL](https://secure-notes-api-u0nq.onrender.com).
+2. Send a POST request to `/api/auth/register` with a new user's JSON details.
+3. Send a POST request to `/api/auth/login` with that user's email and password.
+4. Copy the returned access token.
+5. For private routes, choose **Authorization → Bearer Token** in Postman and paste the token.
+6. Test the note routes using the User token.
+7. Sign in with a separately created Admin account and use its token to test the Admin routes.
 
-| Method | Endpoint | Purpose | Auth |
-| --- | --- | --- | --- |
-| POST | `/api/auth/register` | Register a regular user | No |
-| POST | `/api/auth/login` | Log in and receive an access token | No |
-| GET | `/api/auth/me` | Get the authenticated user's profile | Bearer token |
+### Expected access responses
 
-### Notes
+| Situation | Expected status |
+|---|---|
+| Protected route without a token | 401 Unauthorized |
+| Invalid or expired token | 401 Unauthorized |
+| Normal user calls an Admin route | 403 Forbidden |
+| Request data fails validation | 400 Bad Request (or the validation response defined by the API) |
+| Successful creation | Usually 201 Created |
+| Successful read or update | Usually 200 OK |
+| Successful deletion | Usually 200 OK or 204 No Content, depending on the route |
 
-| Method | Endpoint | Purpose | Auth |
-| --- | --- | --- | --- |
-| POST | `/api/notes` | Create a note | User/Admin |
-| GET | `/api/notes` | List the current user's notes | User/Admin |
-| GET | `/api/notes/:id` | Get a note | User/Admin; owner only |
-| PUT | `/api/notes/:id` | Update a note | User/Admin; owner only |
-| DELETE | `/api/notes/:id` | Delete a note | User/Admin; owner only |
+Use test accounts and disposable test records when checking update and delete operations.
 
-Use **PUT** for updates. This API does not document PATCH as the update method.
+## Troubleshooting
 
-### Admin
+**The application says it cannot connect to the API**
+- Open the [API health check](https://secure-notes-api-u0nq.onrender.com/health).
+- Confirm the response says the database is connected.
+- Check the Render service status and logs.
 
-Every admin endpoint requires a valid Admin Bearer token.
+**The browser reports a CORS error**
+- Confirm the Netlify site URL is exactly listed in Render's `CORS_ORIGIN` variable.
+- Do not include a trailing slash or an `/api` suffix in the origin.
+- Save the environment variable and wait for the Render deployment to finish.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| POST | `/api/admin/users` | Create a user |
-| GET | `/api/admin/users` | List all users |
-| GET | `/api/admin/users/:id` | Get a user's details |
-| PUT | `/api/admin/users/:id` | Update a user |
-| DELETE | `/api/admin/users/:id` | Delete a user |
-| GET | `/api/admin/notes` | View notes from all users |
-| GET | `/api/admin/users/group-by-interests` | Group users by interests |
+**The first API request takes a while**
+- A free hosting service may sleep after a period without requests. The first request can take longer while it starts.
 
-### Other
+**A normal user cannot open the Admin page**
+- This is expected. Sign in with an account whose database role is `admin`.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/users/:userId/posts` | Get posts for a user |
-| GET | `/health` | Check API and database readiness |
+## Important Security Notes
 
-List endpoints support pagination with `?page=1&limit=10`.
+- Never commit `.env` files or real credentials.
+- Do not share access tokens.
+- Use a unique administrator password.
+- Do not use personal or production administrator credentials for demonstrations.
+- Only test with accounts and data you are authorized to use.
 
-## Admin Account Setup
+## License
 
-For security, the application does not create a default admin account and public registration should not grant admin privileges.
-
-The repository provides a one-time seed command. Run it from the backend project using the **production MongoDB connection string** and temporary environment variables:
-
-```bash
-ADMIN_NAME="Assignment Admin" \
-ADMIN_EMAIL="your-admin-email@example.com" \
-ADMIN_PASSWORD="Use-A-Unique-Password-12+" \
-MONGODB_URI="your-production-mongodb-connection-string" \
-JWT_SECRET="your-local-valid-jwt-secret-of-at-least-32-characters" \
-npm run seed:admin
-```
-
-Replace the example values locally. Do not paste real credentials into this README, GitHub, screenshots, or public messages. The admin password must be at least 12 characters. The seed command will not promote an existing regular user to admin.
-
-After successful seeding, remove the temporary admin environment variables from your shell/environment. Keep the admin password private and store it securely.
-
-### Admin Login
-
-Send:
-
-`POST https://secure-notes-api-u0nq.onrender.com/api/auth/login`
-
-JSON body:
-
-```json
-{
-  "email": "your-admin-email@example.com",
-  "password": "your-admin-password"
-}
-```
-
-Copy the returned access token into your API client (for example, Postman):
-
-- Authorization type: **Bearer Token**
-- Token: the access token returned by login
-
-Then call the admin endpoints listed above. Never share the access token.
-
-### How Assignment Evaluators Can Test Admin Features
-
-The project owner should create a dedicated test admin account in the deployed database and share its login credentials with the evaluator through a private submission channel—not in this public repository.
-
-The evaluator can then:
-
-1. Log in using the Admin Login instructions above.
-2. Set the returned access token as a Bearer token in Postman or another API client.
-3. Call `GET /api/admin/users` to list users.
-4. Call `GET /api/admin/users/group-by-interests` to test the interests aggregation.
-5. Call `POST /api/admin/users` to create a test user.
-6. Call `GET /api/admin/users/:id`, `PUT /api/admin/users/:id`, and `DELETE /api/admin/users/:id` to test user management. Use a disposable test user for deletion.
-7. Call `GET /api/admin/notes` to view notes across users.
-
-Use a separate normal user account to test the User role. Do not give evaluators a personal account or production owner credentials. After evaluation, rotate or disable the temporary test admin account.
-
-## Deployment on Render
-
-This repository includes `render.yaml` for a Render Web Service.
-
-1. Create or configure a Render Web Service from this repository.
-2. Use the `production-hardening` branch until its changes are merged into `main`.
-3. Set `MONGODB_URI` to the MongoDB Atlas connection string in Render Environment.
-4. Set `CORS_ORIGIN` to the exact deployed frontend origin.
-5. Keep `JWT_SECRET` private. Render can generate a value from the Blueprint.
-6. Deploy and verify the health check: https://secure-notes-api-u0nq.onrender.com/health
-
-## Environment Variables
-
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `NODE_ENV` | No | Use `production` on Render |
-| `PORT` | No | Server port; supplied by Render |
-| `MONGODB_URI` | Yes | Persistent MongoDB connection |
-| `JWT_SECRET` | Yes | JWT signing secret (32+ characters) |
-| `JWT_EXPIRES_IN` | No | Token lifetime; defaults to `7d` |
-| `CORS_ORIGIN` | Production | Exact frontend origin; comma-separated for multiple origins |
-| `TRUST_PROXY_HOPS` | No | Number of trusted reverse-proxy hops |
-| `ADMIN_EMAIL` | Admin setup only | One-time admin email |
-| `ADMIN_PASSWORD` | Admin setup only | One-time admin password (12+ characters) |
-| `ADMIN_NAME` | Admin setup only | Optional admin display name |
-
-Never commit `.env`, database connection strings, passwords, JWT secrets, or access tokens.
-
-## Security Testing Checklist
-
-Run these checks with separate test accounts and non-sensitive test data. Record the actual result before marking a check as passed.
-
-| Test | Expected result |
-| --- | --- |
-| Request a protected endpoint without a token | `401 Unauthorized` |
-| Send an invalid or expired token | `401 Unauthorized` |
-| Call an admin endpoint with a normal user's token | `403 Forbidden` |
-| Try to register with `role: "admin"` | Must not grant admin access |
-| Read another user's note | Access denied |
-| Update or delete another user's note | Access denied |
-| Submit invalid request data | Validation error (normally `400 Bad Request`) |
-| Send repeated login requests | Rate limiting should apply |
-| Send a request from an unapproved browser origin | CORS should block the origin |
-
-Do not test against other people's accounts or data. Do not perform destructive tests on real user records. A checklist item is not considered passed until it has been executed and its actual response checked.
-
-## Security and Operations
-
-- Public service URLs use HTTPS.
-- CORS permits only configured origins.
-- Do not set `trust proxy` to `true`; configure the hop count to match the hosting topology.
-- `/health` checks database readiness.
-- SIGTERM and SIGINT trigger graceful HTTP and MongoDB shutdown.
-- Request logs record method, path, status, and duration only; they do not record passwords, tokens, cookies, or request bodies.
-- Configure MongoDB Atlas backups and periodically test restoration.
-
-## Tests
-
-The API test suite requires a reachable MongoDB database:
-
-```bash
-MONGODB_URI=mongodb://127.0.0.1:27017/secure_notes_test JWT_SECRET=local-test-secret-that-is-at-least-32-characters npm test
-```
-
-GitHub Actions runs the suite against a temporary MongoDB service on pushes and pull requests.
+See the repository for license information.
