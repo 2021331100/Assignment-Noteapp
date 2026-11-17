@@ -1,15 +1,15 @@
 {
   "name": "assignment",
   "version": "1.0.0",
-  "description": "",
+  "description": "Secure note-taking REST API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "seed:admin": "node -e \"require('./src/config/seedAdmin')().then(()=>process.exit(0)).catch((err)=>{console.error(err);process.exit(1);})\"",
+    "seed:admin": "node src/config/seedAdmin.js",
     "test": "node --test tests/api.test.js"
   },
-  "keywords": [],
+  "keywords": ["express", "mongodb", "notes", "rest-api"],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
