@@ -1,5 +1,5 @@
 {
-  "name": "secure-notes-api",
+  "name": "assignment",
   "version": "1.0.0",
   "description": "Secure note-taking REST API",
   "main": "server.js",
