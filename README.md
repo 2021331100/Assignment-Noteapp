@@ -1,172 +1,61 @@
 # Secure Note-Taking REST API
 
-A secure, modular note-taking application built with Node.js, Express.js, MongoDB, and Mongoose. The project follows MVC architecture, includes JWT-based authentication, role-based permission checks, pagination, database indexing, and aggregation endpoints for the required interview assignment.
+A modular note-taking API built with Node.js, Express, MongoDB, and Mongoose. It includes JWT authentication, role-based access control, note ownership rules, pagination, indexes, aggregation endpoints, and a small demo frontend.
 
 ## Features
 
-- User registration and login with JWT authentication
+- User registration and login with JWT bearer authentication
 - Password hashing with bcryptjs
-- Role-based access control with `user` and `admin`
+- User and admin role-based permissions
 - Note CRUD restricted to note owners
-- Admin user management and admin note visibility
-- Pagination for every list route
-- Database indexes created via `schema.index()`
-- Aggregation for grouping users by interests
-- Aggregation with `$lookup` for user posts
-- Helmet-based security headers
-- Rate limiting on auth routes
-- CORS configuration
-- Centralized error handling and validation
-- Minimal frontend using HTML/CSS/Vanilla JavaScript
+- Admin user management and visibility of all notes
+- Pagination and MongoDB indexes
+- Aggregation for grouping users by interests and looking up posts
+- Helmet security headers and rate limiting
+- Exact-origin CORS allowlist
+- Environment validation and persistent MongoDB requirement
+- Health check, structured request logs, and graceful shutdown
 
-## Technology Stack
-
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
-- JWT
-- bcryptjs
-- Helmet
-- CORS
-- express-rate-limit
-- HTML, CSS, and Vanilla JavaScript
-
-## Folder Structure
-
-```text
-.
-├── .env
-├── .env.example
-├── .gitignore
-├── README.md
-├── package.json
-├── server.js
-├── public/
-│   ├── app.js
-│   ├── index.html
-│   └── styles.css
-├── src/
-│   ├── app.js
-│   ├── config/
-│   │   └── db.js
-│   ├── controllers/
-│   │   ├── adminController.js
-│   │   ├── authController.js
-│   │   ├── noteController.js
-│   │   └── userController.js
-│   ├── middleware/
-│   │   ├── authMiddleware.js
-│   │   └── errorHandler.js
-│   ├── models/
-│   │   ├── Note.js
-│   │   ├── Post.js
-│   │   └── User.js
-│   ├── routes/
-│   │   ├── adminRoutes.js
-│   │   ├── authRoutes.js
-│   │   ├── noteRoutes.js
-│   │   └── userRoutes.js
-│   ├── utils/
-│   │   ├── AppError.js
-│   │   ├── asyncHandler.js
-│   │   └── pagination.js
-│   └── validators/
-│       ├── adminValidator.js
-│       ├── authValidator.js
-│       └── noteValidator.js
-└── tests/
-    └── api.test.js
-```
-
-## Installation
+## Local setup
 
 ```bash
 npm install
-```
-
-## Environment Setup
-
-Copy `.env.example` into `.env` and update the values.
-
-```bash
 cp .env.example .env
 ```
 
-Required variables:
+Set real values in `.env`:
 
-```env
-PORT=3000
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster.example.mongodb.net/note_app
-JWT_SECRET=replace_with_a_long_random_secret
-JWT_EXPIRES_IN=7d
-NODE_ENV=development
+- `MONGODB_URI`: a MongoDB Atlas or local persistent MongoDB connection string
+- `JWT_SECRET`: a random secret of at least 32 characters
+- `CORS_ORIGIN`: the exact frontend origin, e.g. `http://localhost:3000`
+- `TRUST_PROXY_HOPS`: `0` for local development
+
+Start the API:
+
+```bash
+npm run dev
 ```
 
-> The project also contains a safe in-memory MongoDB fallback used in restricted environments for testing. The production config should still use the Atlas URI when available.
+The server listens on `PORT` (default 3000). It fails at startup if required production configuration is missing. There is no local or in-memory database fallback.
 
-## Database Setup
+## Create the first admin
 
-1. Make sure MongoDB is running or your MongoDB Atlas connection string is valid.
-2. The app automatically connects to MongoDB using `MONGODB_URI`.
-3. If the external URI is unavailable, it falls back to a local in-memory MongoDB instance for smoke testing and local verification.
+Admin creation is an explicit one-time operation. Set `ADMIN_EMAIL`, `ADMIN_PASSWORD` (at least 12 characters), and optionally `ADMIN_NAME` in your local environment, then run:
 
-## Authentication and Authorization
-
-### Default admin account
-
-The app creates a default admin automatically on startup if no matching admin user exists. The default credentials are:
-
-```text
-Email: admin@example.com
-Password: Admin@123
+```bash
+npm run seed:admin
 ```
 
-These values can be overridden using `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`.
+The seed command will not promote an existing regular user to admin and will not create an account with a built-in default password. Remove the temporary admin environment variables after setup.
 
-### JWT usage
-
-After successful login or registration, the API returns a JWT bearer token. Clients must send it with the `Authorization: Bearer <token>` header.
-
-### Role permissions
-
-- `user`
-  - Register
-  - Log in
-  - View own profile
-  - Create notes
-  - List own notes
-  - View own note
-  - Update own note
-  - Delete own note
-- `admin`
-  - All user permissions
-  - Create users
-  - List all users
-  - View user profiles
-  - Update users
-  - Delete users
-  - View all notes
-  - View user grouping by interests
-
-### Security notes
-
-- Passwords are never returned in responses.
-- Passwords are hashed with bcryptjs before persistence.
-- Normal users cannot assign themselves the admin role during registration.
-- Admin-only routes enforce fresh DB role checks.
-- A Bearer token approach is used instead of cookies for simplicity and compatibility, but cookies would require CSRF protection and secure cookie flags in production if chosen.
-
-## API Endpoints
+## API endpoints
 
 ### Authentication
-
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 
 ### Notes
-
 - `POST /api/notes`
 - `GET /api/notes`
 - `GET /api/notes/:id`
@@ -174,7 +63,6 @@ After successful login or registration, the API returns a JWT bearer token. Clie
 - `DELETE /api/notes/:id`
 
 ### Admin
-
 - `POST /api/admin/users`
 - `GET /api/admin/users`
 - `GET /api/admin/users/:id`
@@ -183,88 +71,57 @@ After successful login or registration, the API returns a JWT bearer token. Clie
 - `GET /api/admin/notes`
 - `GET /api/admin/users/group-by-interests`
 
-### Posts
-
+### Other
 - `GET /api/users/:userId/posts`
+- `GET /health` — returns HTTP 200 when MongoDB is connected, otherwise HTTP 503
 
-## Pagination
+List endpoints accept `?page=1&limit=10`.
 
-All list endpoints support pagination:
+## Deployment on Render
 
-```text
-?page=1&limit=10
-```
+This repository includes `render.yaml` for a Render Web Service.
 
-Response structure:
+1. Create a Render Web Service from this repository.
+2. Use the `production-hardening` branch until its changes are merged into `main`.
+3. Set `MONGODB_URI` to your MongoDB Atlas connection string in Render Environment.
+4. Set `CORS_ORIGIN` to the exact deployed frontend origin (for example, `https://your-site.netlify.app`).
+5. Keep `JWT_SECRET` private. Render can generate a value from the Blueprint.
+6. Deploy and check `https://YOUR-SERVICE.onrender.com/health`.
 
-```json
-{
-  "page": 1,
-  "limit": 10,
-  "totalRecords": 42,
-  "totalPages": 5,
-  "data": []
-}
-```
+Render's free web services may spin down after inactivity, so the first request after a quiet period can take longer.
 
-## Indexing Strategy
+## Environment variables
 
-The app explicitly uses `schema.index()` to define the necessary compound indexes:
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NODE_ENV` | No | Use `production` on Render |
+| `PORT` | No | Server port; supplied by Render |
+| `MONGODB_URI` | Yes | Persistent MongoDB connection |
+| `JWT_SECRET` | Yes | JWT signing secret (32+ characters) |
+| `JWT_EXPIRES_IN` | No | Token lifetime; defaults to `7d` |
+| `CORS_ORIGIN` | Production | Exact frontend origin; comma-separated for multiple origins |
+| `TRUST_PROXY_HOPS` | No | Number of trusted reverse-proxy hops; set to match hosting topology |
+| `ADMIN_EMAIL` | Admin setup only | One-time admin email |
+| `ADMIN_PASSWORD` | Admin setup only | One-time admin password (12+ characters) |
 
-### User indexes
+Never commit `.env` or production credentials.
 
-- `email` unique index for login and duplicate check prevention
-- `{ createdAt: -1, _id: -1 }` for admin user listing and consistent sorting
+## Security and operations
 
-### Note indexes
+- TLS is terminated by Render; public service URLs use HTTPS.
+- CORS permits only configured origins.
+- Do not set `trust proxy` to `true`; configure the hop count to match the host's proxy chain.
+- `/health` checks database readiness.
+- SIGTERM and SIGINT trigger graceful HTTP and MongoDB shutdown.
+- Request logs record method, path, status, and duration only; they do not record passwords, tokens, cookies, or request bodies.
+- Configure MongoDB Atlas backups and periodically test restoration.
 
-- `{ userId: 1, createdAt: -1, _id: -1 }` for listing a user's notes with pagination and sorting
-- `{ createdAt: -1, _id: -1 }` for admin-wide note listing
+## Tests
 
-### Post index
-
-- `{ userId: 1, createdAt: -1, _id: -1 }` for the user posts lookup pipeline and pagination within `$lookup`
-
-These indexes are intentionally kept minimal and directly support required query and sorting behavior.
-
-## Aggregation Pipelines
-
-### 1) Group users by interests
-
-This route uses a single `User.aggregate()` call with:
-
-- `$unwind`
-- `$group`
-- `$push`
-- `$sort`
-
-It returns the users grouped by interest.
-
-### 2) User posts lookup
-
-This route uses a single `User.aggregate()` pipeline with a `$lookup` stage to join the `posts` collection by `userId`. It sorts posts by `createdAt` descending and `_id` descending and paginates inside the pipeline.
-
-## Running the App
+The API test suite requires a reachable MongoDB database:
 
 ```bash
-npm start
+MONGODB_URI=mongodb://127.0.0.1:27017/secure_notes_test JWT_SECRET=local-test-secret-that-is-at-least-32-characters npm test
 ```
 
-For local development:
-
-```bash
-npm run dev
-```
-
-## Testing
-
-The project includes a Node.js test suite covering registration, login, auth, user permissions, note ownership checks, admin access, pagination, and aggregation behavior.
-
-```bash
-npm test
-```
-
-## Notes
-
-- The application uses a Bearer token pattern in the API and therefore is designed to work with a frontend that stores the token in memory or localStorage.
-- If a cookie-based auth model is chosen later, CSRF protection and secure cookie flags should be added at that time.
+GitHub Actions runs the suite against a temporary MongoDB service on pushes and pull requests.
