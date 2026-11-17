@@ -1,0 +1,114 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #1f2937;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #111827;
+  color: #fff;
+  padding: 1rem 2rem;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+button {
+  border: none;
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.panel {
+  display: block;
+}
+
+.hidden {
+  display: none;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+textarea {
+  min-height: 120px;
+}
+
+.note-item,
+.user-item,
+.group-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: #f9fafb;
+}
+
+.note-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.inline-button {
+  background: #0f766e;
+}
+
+.small-button {
+  background: #ea580c;
+}
+
+.error {
+  color: #b91c1c;
+  margin-top: 0.5rem;
+}
+
+.success {
+  color: #166534;
+  margin-top: 0.5rem;
+}
